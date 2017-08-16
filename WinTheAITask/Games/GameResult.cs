@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WinTheAITask
+namespace WinTheAITask.Games
 {
     public enum GameState { Win, Lose, ContinuePlaying } 
 
