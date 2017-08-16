@@ -18,6 +18,7 @@ namespace WinTheAITask
 
             GameList.Add(new BinaryGame());
             GameList.Add(new TicTacToeGame());
+            GameList.Add(new LabyrinthGame());
         }
 
         public void Start()

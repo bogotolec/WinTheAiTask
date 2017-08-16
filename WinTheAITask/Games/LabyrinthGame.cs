@@ -19,7 +19,6 @@ namespace WinTheAITask.Games
             this.Rules = "You must sent only one string that contains sybmols 'u', 'l', 'd' and 'r' (up, left, down and right) - the shortest way to the finish.";
             this.Rules += "\n\tStart point = s";
             this.Rules += "\n\tEnd point = e";
-            this.Rules += "\n\tTeleport = 0";
             this.Rules += "\nType 'Start' to begin";
 
             GameLabyrinth = Labyrinth.Generate();
@@ -27,7 +26,7 @@ namespace WinTheAITask.Games
 
         public GameResult GetAnswer(string Request)
         {
-            if (Request.ToLower() == "start")
+            if (Request.ToLower().StartsWith("start"))
             {
                 GameResult Result = new GameResult();
                 Result.State = GameState.ContinuePlaying;
@@ -40,7 +39,7 @@ namespace WinTheAITask.Games
 
         private class Labyrinth
         {
-            public int Heigth { get; }
+            public int Height { get; }
             public int Width { get; }
 
             private Cell[,] Map;
@@ -48,7 +47,7 @@ namespace WinTheAITask.Games
             public override string ToString()
             {
                 StringBuilder SB = new StringBuilder();
-                for (int i = 0; i < Heigth; i++)
+                for (int i = 0; i < Height; i++)
                 {
                     for (int j = 0; j < Width; j++)
                     {
@@ -67,7 +66,7 @@ namespace WinTheAITask.Games
                 if (Width % 2 == 0)
                     Width++;
 
-                this.Heigth = Heigth;
+                this.Height = Height;
                 this.Width = Width;
 
                 Map = new Cell[Height, Width];
@@ -84,7 +83,7 @@ namespace WinTheAITask.Games
                 }
 
                 Map[1, 1].Type = Cell.CellType.Start;
-                Map[Heigth - 2, Width - 2].Type = Cell.CellType.Start;
+                Map[Height - 2, Width - 2].Type = Cell.CellType.Finish;
             }
 
             public static Labyrinth Generate(UInt32 seed = 0)
@@ -97,37 +96,84 @@ namespace WinTheAITask.Games
 
                 Labyrinth Resutlt = new Labyrinth(Height, Width);
 
-                int Modifer = 0;
+                int Modifer = 1;
                 while (!Resutlt.IsPassable)
                 {
-                    Resutlt.DeleteNearestWall(((seed / Modifer) % ((Resutlt.Heigth - 2) / 2) + 1) * 2,
-                                               ((seed / Modifer) % ((Resutlt.Width - 2) / 2) + 1) * 2);
+                    Resutlt.DeleteNearestWall((seed / Modifer) % (Resutlt.Height - 2) + 1,
+                                               (seed / Modifer) % (Resutlt.Width - 2) + 1);
                     Modifer++;
                 }
 
                 return Resutlt;
             }
 
-            public void DeleteNearestWall(long x, long y)
+            public void DeleteNearestWall(long y, long x)
             {
                 Queue<Cell> queue = new Queue<Cell>();
+                bool[,] Used = new bool[Height, Width];
 
-                Cell NowCell = Map[x, y];
+                if ((y % 2 == 0 && x % 2 == 0) || (y % 2 == 1 && x % 2 == 1))
+                {
+                    switch (((x + y) / 2) % 4)
+                    {
+                        case 0:
+                            x += 1; break;
+                        case 1:
+                            y += 1; break;
+                        case 2:
+                            x -= 1; break;
+                        case 3:
+                            y -= 1; break;
+                    }
+                }
+
+                if (y >= Height - 1)
+                    y -= 2;
+                if (x >= Width - 1)
+                    x -= 2;
+                if (y <= 0)
+                    y += 2;
+                if (x <= 0)
+                    x += 2;
+
+                for (int i = 0; i < Height; i++)
+                {
+                    for (int j = 0; j < Width; j++)
+                    {
+                        Used[i, j] = false;
+                    }
+                }
+
+                Cell NowCell = Map[y, x];
+                Used[y, x] = true;
                 
                 while (NowCell.Type != Cell.CellType.Wall)
                 {
-                    if (NowCell.X + 2 < Heigth - 1)
-                        queue.Enqueue(Map[NowCell.X + 2, NowCell.Y]);
-                    if (NowCell.X - 2 > 0)
-                        queue.Enqueue(Map[NowCell.X - 2, NowCell.Y]);
-                    if (NowCell.Y + 2 < Width)
-                        queue.Enqueue(Map[NowCell.X, NowCell.Y + 2]);
-                    if (NowCell.Y - 2 > 0)
-                        queue.Enqueue(Map[NowCell.X, NowCell.Y - 2]);
+                    if (NowCell.Y + 2 < Height - 1 && !Used[NowCell.Y + 2, NowCell.X])
+                    {
+                        queue.Enqueue(Map[NowCell.Y + 2, NowCell.X]);
+                        Used[NowCell.Y + 2, NowCell.X] = true;
+                    }
+                    if (NowCell.Y - 2 > 0 && !Used[NowCell.Y - 2, NowCell.X])
+                    {
+                        queue.Enqueue(Map[NowCell.Y - 2, NowCell.X]);
+                        Used[NowCell.Y - 2, NowCell.X] = true;
+                    }
+                    if (NowCell.X + 2 < Width - 1 && !Used[NowCell.Y, NowCell.X + 2])
+                    {
+                        queue.Enqueue(Map[NowCell.Y, NowCell.X + 2]);
+                        Used[NowCell.Y, NowCell.X + 2] = true;
+                    }
+                    if (NowCell.X - 2 > 0 && !Used[NowCell.Y, NowCell.X - 2])
+                    {
+                        queue.Enqueue(Map[NowCell.Y, NowCell.X - 2]);
+                        Used[NowCell.Y, NowCell.X - 2] = true;
+                    }
 
                     if (queue.Count == 0)
                         return;
-
+                    if (queue.Count > 30)
+                        return;
                     NowCell = queue.Dequeue();
                 }
 
@@ -138,9 +184,9 @@ namespace WinTheAITask.Games
             {
                 get
                 {
-                    int[,] IntMap = new int[Heigth, Width];
+                    int[,] IntMap = new int[Height, Width];
 
-                    for (int i = 0; i < Heigth; i++)
+                    for (int i = 0; i < Height; i++)
                     {
                         for (int j = 0; j < Width; j++)
                         {
@@ -160,7 +206,7 @@ namespace WinTheAITask.Games
                     {
                         HasNewCell = false;
 
-                        for (int i = 1; i < Heigth - 1; i++)
+                        for (int i = 1; i < Height - 1; i++)
                         {
                             for (int j = 1; j < Width - 1; j++)
                             {
@@ -179,7 +225,7 @@ namespace WinTheAITask.Games
                         Counter++;
                     }
 
-                    if (IntMap[Heigth - 2, Width - 2] != 0)
+                    if (IntMap[Height - 2, Width - 2] != 0)
                         return true;
                     return false;
                 }
@@ -187,11 +233,10 @@ namespace WinTheAITask.Games
 
             private class Cell
             {
-                public enum CellType { Empty, Wall, Teleport, Start, Finish }
-
-                public CellType Type { get; set; }
                 public int Y { get; }
                 public int X { get; }
+                public bool HasRightBorder { get; set; }
+                public bool HasBottomBorder { get; set; }
 
                 public override string ToString()
                 {
@@ -212,9 +257,8 @@ namespace WinTheAITask.Games
                     }
                 }
 
-                public Cell(CellType Type, int Y, int X)
+                public Cell(int Y, int X)
                 {
-                    this.Type = Type;
                     this.Y = Y;
                     this.X = X;
                 }
