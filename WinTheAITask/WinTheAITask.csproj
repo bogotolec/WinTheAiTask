@@ -48,6 +48,7 @@
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Games\Game.cs" />
     <Compile Include="Games\GameResult.cs" />
+    <Compile Include="Games\LabyrinthGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Games\TicTacToeGame.cs" />
