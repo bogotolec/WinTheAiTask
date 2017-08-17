@@ -92,7 +92,7 @@ namespace WinTheAITask.Games
                 if (seed <= 0)
                     seed = (new Random()).Next(0, Int32.MaxValue);
 
-                int Height = 45 + (int)(seed % 10);
+                int Height = 5 + (int)(seed % 10);
                 int Width = 15 + (int)(seed % 9);
 
                 Labyrinth Resutlt = new Labyrinth(Width);
@@ -101,6 +101,8 @@ namespace WinTheAITask.Games
                 {
                     Resutlt.AddRow(seed);
                 }
+
+                Resutlt.CreateLastRow();
 
                 return Resutlt;
             }
@@ -143,7 +145,7 @@ namespace WinTheAITask.Games
                     for (int i = 0; i < Width - 1; i++)
                     {
                         if ((Seed / (i + 1)) % 3 == 0 && (RowList[Height][i + 1].Multiplisity != RowList[Height][i].Multiplisity))
-                            RowList[Height][i + 1].Multiplisity = RowList[Height][i].Multiplisity; // Do not add border
+                            JoinMultiplisities(Height, RowList[Height][i].Multiplisity, RowList[Height][i + 1].Multiplisity); // Do not add border
                         else
                             RowList[Height][i].HasRightBorder = true; // Add border
 
@@ -172,7 +174,7 @@ namespace WinTheAITask.Games
                         if ((Seed / (i + 1)) % 2 == 0)
                             RowList[Height][i].HasRightBorder = true; // Add border
                         else
-                            RowList[Height][i + 1].Multiplisity = RowList[Height][i].Multiplisity; // Do not add border
+                            JoinMultiplisities(Height, RowList[Height][i].Multiplisity, RowList[Height][i + 1].Multiplisity); // Do not add border
 
                     }
 
@@ -189,13 +191,22 @@ namespace WinTheAITask.Games
                 Height++;
             }
 
+            public void CreateLastRow()
+            {
+                for (int i = 0; i < Width - 1; i++)
+                {
+                    if (RowList[Height - 1][i].Multiplisity != RowList[Height - 1][i + 1].Multiplisity)
+                        RowList[Height - 1][i].HasRightBorder = false;
+                }
+            }
+
             private bool IsAlone(int Row, int Multiplisity)
             {
                 int Count = 0;
 
                 for (int i = 0; i < Width; i++)
                 {
-                    if (RowList[Row][i].Multiplisity == Multiplisity)
+                    if (RowList[Row][i].Multiplisity == Multiplisity && !RowList[Row][i].HasBottomBorder)
                         Count++;
                 }
 
@@ -203,6 +214,15 @@ namespace WinTheAITask.Games
                     return true;
 
                 return false;
+            }
+
+            private void JoinMultiplisities(int Row, int Multiplisity1, int Multiplisity2)
+            {
+                for (int i = 0; i < Width; i++)
+                {
+                    if (RowList[Row][i].Multiplisity == Multiplisity2)
+                        RowList[Row][i].Multiplisity = Multiplisity1;
+                }
             }
 
             private class Cell
